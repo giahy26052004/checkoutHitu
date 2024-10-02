@@ -7,19 +7,20 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
-import { db, storage } from "../../firebaseConfig";
+
 import { useEffect, useState } from "react";
 import formathTime from "../../ulits/formathTime";
 import { useLocation } from "react-router-dom";
-import { useDocumentTitle, useDropDown } from "../../hook";
+import { useDocumentTitle } from "../../hook";
 import { DropDown, DropDownUser, Model, Pagination } from "../../components";
 import Detail from "./Detail";
-import { toast } from "react-toastify";
+
 import { deleteObject, ref } from "firebase/storage";
 import { useToasts } from "react-toast-notifications";
+import { db, storage } from "../../firebaseConfig";
 const Dashboard = () => {
   useDocumentTitle("Quản lý");
-  const colRef = collection(db, "students");
+
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);

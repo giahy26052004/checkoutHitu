@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { AiOutlineClose } from "react-icons/ai";
 import { db } from "../firebaseConfig";
+
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Model = ({ setIsModel }) => {
