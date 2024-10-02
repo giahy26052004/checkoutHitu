@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+
 import { useRoutes } from "react-router-dom";
 import Layout from "./layout";
 import Home from "./page/home";
@@ -7,10 +7,10 @@ import LayoutAdmin from "./layout/LayoutAdmin";
 import Dashboard from "./page/admin";
 import Login from "./page/admin/Login";
 import Register from "./page/admin/Register";
-import { db } from "./firebaseConfig";
-import { collection, getDocs } from "firebase/firestore";
-import AddStudent from "./page/admin/AddStudent/AddStudent";
+
+
 import AdminEdit from "./page/admin/AdminEdit.jsx";
+
 
 function App() {
   const routes = [
@@ -30,23 +30,6 @@ function App() {
       ],
     },
   ];
-
-  useEffect(() => {
-    const testFirebaseConnection = async () => {
-      try {
-        const usersCollection = collection(db, "students");
-        const userSnapshot = await getDocs(usersCollection);
-        const userList = userSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-      } catch (error) {
-        console.error("Error fetching users: ", error);
-      }
-    };
-
-    testFirebaseConnection();
-  }, []);
 
   return (
     <>
