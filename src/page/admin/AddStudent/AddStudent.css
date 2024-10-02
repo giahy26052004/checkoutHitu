@@ -1,0 +1,33 @@
+/* AddStudent.css */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Khoảng cách giữa các phần tử */
+  max-width: 400px; /* Chiều rộng tối đa của form */
+  margin: auto; /* Căn giữa form */
+  padding: 20px; /* Padding cho form */
+  border: 1px solid #ddd; /* Đường viền cho form */
+  border-radius: 8px; /* Bo góc */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Đổ bóng */
+}
+
+input, select {
+  padding: 10px; /* Padding cho input và select */
+  border: 1px solid #ccc; /* Đường viền cho input và select */
+  border-radius: 4px; /* Bo góc */
+  font-size: 16px; /* Kích thước chữ */
+}
+
+button {
+  padding: 10px; /* Padding cho button */
+  background-color: #4CAF50; /* Màu nền */
+  color: white; /* Màu chữ */
+  border: none; /* Không có đường viền */
+  border-radius: 4px; /* Bo góc */
+  cursor: pointer; /* Con trỏ khi hover */
+  font-size: 16px; /* Kích thước chữ */
+}
+
+button:hover {
+  background-color: #45a049; /* Màu nền khi hover */
+}
