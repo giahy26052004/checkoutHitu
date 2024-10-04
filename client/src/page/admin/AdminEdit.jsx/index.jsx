@@ -1,12 +1,11 @@
 import {
   collection,
-  doc,
   getDocs,
   addDoc,
   query,
   orderBy,
 } from "firebase/firestore";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { db } from "../../../firebaseConfig";
 import { useToasts } from "react-toast-notifications";
 import { AiFillLeftCircle } from "react-icons/ai";
