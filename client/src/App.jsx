@@ -1,4 +1,3 @@
-
 import { useRoutes } from "react-router-dom";
 import Layout from "./layout";
 import Home from "./page/home";
@@ -8,9 +7,7 @@ import Dashboard from "./page/admin";
 import Login from "./page/admin/Login";
 import Register from "./page/admin/Register";
 
-
 import AdminEdit from "./page/admin/AdminEdit.jsx";
-
 
 function App() {
   const routes = [

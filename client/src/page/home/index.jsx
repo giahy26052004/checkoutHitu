@@ -31,9 +31,6 @@ const Home = () => {
   const [ip, setIp] = useState();
   const { address, userPosition } = useAddress();
 
-
-  
-
   const getFingerprint = async () => {
     const fp = await FingerprintJS.load();
     const result = await fp.get();

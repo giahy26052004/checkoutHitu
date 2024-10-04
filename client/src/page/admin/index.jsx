@@ -6,6 +6,7 @@ import {
   where,
   deleteDoc,
   doc,
+  addDoc, // Import addDoc
 } from "firebase/firestore";
 
 import { useEffect, useState } from "react";
@@ -18,6 +19,9 @@ import Detail from "./Detail";
 import { deleteObject, ref } from "firebase/storage";
 import { useToasts } from "react-toast-notifications";
 import { db, storage } from "../../firebaseConfig";
+import ExportToExcel from "../../components/ExportToExcel"; // Add this import
+import ImportExcel from "../../components/ImportExcel"; // Import the ImportExcel component
+
 const Dashboard = () => {
   useDocumentTitle("Quản lý");
 
@@ -37,11 +41,59 @@ const Dashboard = () => {
     TitleHome: "",
     unionChoice: [],
   });
+  const deleteInvalidImageUrls = async () => {
+    try {
+      const usersCollection = collection(db, "students");
+      const userSnapshot = await getDocs(usersCollection);
+      const invalidDocs = [];
+
+      userSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const imageUrl = data.image;
+
+        // Kiểm tra URL hình ảnh có hợp lệ hay không
+        if (!imageUrl || !isValidUrl(imageUrl)) {
+          invalidDocs.push(doc.id); // Lưu ID document để xóa sau
+        }
+      });
+
+      // Xóa các document không hợp lệ
+      for (const id of invalidDocs) {
+        await deleteDoc(doc(db, "students", id));
+      }
+
+      addToast("Đã xóa các document có URL hình ảnh không hợp lệ!", {
+        appearance: "success",
+        autoDismiss: true,
+      });
+      fetchData(); // Refresh the data after deletion
+    } catch (error) {
+      console.error("Error deleting invalid image URLs: ", error);
+      addToast("Có lỗi xảy ra khi xóa dữ liệu!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+    }
+  };
+
+  // Helper function to validate URL
+  const isValidUrl = (url) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const [dataVeriftyGroup, setDataVerifyGroup] = useState();
+  // New state to hold imported Excel data
+
   useEffect(() => {
     if (page) {
       setCurrentPage(Number(page));
     }
   }, [page, loading]);
+
   useEffect(() => {
     const dataPage = items.slice(
       (currentPage - 1) * itemsPerPage,
@@ -49,9 +101,11 @@ const Dashboard = () => {
     );
     setData(dataPage);
   }, [items, currentPage, itemsPerPage]);
+
   useEffect(() => {
     fetchData();
   }, [group]);
+
   async function fetchData() {
     try {
       const usersCollection = collection(db, "students");
@@ -64,12 +118,12 @@ const Dashboard = () => {
         q = query(usersCollection, where("group", "==", group));
       }
       const userSnapshot = await getDocs(q);
-      const userList = userSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const userList = userSnapshot.docs.map((doc) => {
+        const datanew = { ...doc.data(), id: doc.id };
+        return datanew;
+      });
       fetchTotalItems(userList);
-      console.log("Fetched ne:", userList); // In ra dữ liệu lấy được
+
       setItems(userList);
     } catch (error) {
       console.log("fetchData error: ", error);
@@ -96,14 +150,15 @@ const Dashboard = () => {
     }
 
     const imageUrl = itemToDelete.image;
+    console.log("Image URL:", imageUrl);
 
     // Kiểm tra xem imageUrl có tồn tại
     if (!imageUrl) {
-      addToast("URL hình ảnh không hợp lệ", {
+      addToast("Không có URL hình ảnh để xóa", {
         appearance: "error",
         autoDismiss: true,
       });
-      return;
+      return; // Thoát nếu không có URL hình ảnh
     }
 
     try {
@@ -111,37 +166,84 @@ const Dashboard = () => {
       const imageName = decodeURIComponent(
         imageUrl.split("/o/")[1].split("?")[0]
       );
-      console.log(imageName);
-      // Tạo tham chiếu đến tệp hình ảnh
       const storageRef = ref(storage, `/${imageName}`);
-      console.log("dsd", storageRef);
+
       // Xóa hình ảnh từ Firebase Storage
       await deleteObject(storageRef);
+      console.log("Đã xóa hình ảnh:", imageName);
 
-      // Xóa document từ Firestore
+      // Sau khi xóa hình ảnh thành công, xóa document từ Firestore
       await deleteDoc(doc(db, "students", id));
 
       // Cập nhật lại danh sách items
       const updatedItems = items.filter((item) => item.id !== id);
       setItems(updatedItems);
 
-      addToast("Đã xóa ", {
-        appearance: "error",
-        autoDismiss: true,
-      });
-    } catch (error) {
-      console.log("handleDelete error: ", error);
-      addToast("Đã xóa ", {
+      addToast("Đã xóa item thành công!", {
         appearance: "success",
         autoDismiss: true,
       });
+    } catch (error) {
+      console.error("Có lỗi xảy ra khi xóa item: ", error);
+
+      if (error.code === "storage/object-not-found") {
+        // Hình ảnh không tồn tại trong Storage, vẫn xóa document
+        try {
+          await deleteDoc(doc(db, "students", id));
+          const updatedItems = items.filter((item) => item.id !== id);
+          setItems(updatedItems);
+          fetchData();
+          addToast("Đã xóa item thành công, nhưng hình ảnh không tồn tại!", {
+            appearance: "warning",
+            autoDismiss: true,
+          });
+        } catch (docError) {
+          console.error("Có lỗi khi xóa document từ Firestore: ", docError);
+          addToast("Có lỗi xảy ra khi xóa item!", {
+            appearance: "error",
+            autoDismiss: true,
+          });
+        }
+      } else {
+        // Nếu gặp lỗi khác
+        addToast("Có lỗi xảy ra khi xóa item!", {
+          appearance: "error",
+          autoDismiss: true,
+        });
+      }
     }
   };
+
+  async function DataLicense() {
+    try {
+      const usersCollection = collection(db, "students");
+      setLoading(true);
+      let q;
+
+      if (group === "") {
+        q = query(usersCollection, orderBy("created_at", "desc"));
+      } else {
+        q = query(usersCollection, where("group", "==", group));
+      }
+      const userSnapshot = await getDocs(q);
+      const userList = userSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setDataVerifyGroup(userList);
+    } catch (error) {
+      console.log("fetchData error: ", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => {
+    DataLicense();
+  }, [group]);
 
   const fetchTotalItems = async (userList) => {
     try {
       const totalCount = userList?.length || 0;
-      console.log("fetchTotalItems error: ", totalCount);
       setTotalItems(totalCount);
     } catch (error) {
       console.log("fetchTotalItems error: ", error);
@@ -152,6 +254,7 @@ const Dashboard = () => {
     setItemsPerPage(Number(e.target.value));
     setCurrentPage(1);
   };
+
   const handleChangeSearch = (e) => {
     setLoading(true);
     setTimeout(() => {
@@ -163,10 +266,12 @@ const Dashboard = () => {
       setLoading(false);
     }, 1000);
   };
+
   const pagelimit = Math.ceil(items.length / itemsPerPage);
   const handleGroupChange = (e) => {
     setGroup(e.target.value);
   };
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -184,7 +289,6 @@ const Dashboard = () => {
         const unionChoicene = datane.map((list) => list.unionChoice);
         setDataFetch({
           TitleHome: datane[0].TitleHome,
-
           unionChoice: unionChoicene[0], // Flatten if necessary
         });
       } catch (error) {
@@ -195,6 +299,56 @@ const Dashboard = () => {
     }
     fetchData();
   }, []);
+
+  // Function to handle imported data from Excel
+  const handleDataImport = async (data) => {
+    try {
+      const studentsCollection = collection(db, "students");
+      const dataquery = await getDocs(studentsCollection);
+      const datane = dataquery.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      console.log(datane);
+      console.log(data);
+      for (const item of data) {
+        // Kiểm tra các trường bắt buộc
+        if (!item.magv || !item.group) {
+          addToast("Mã Giảng viên và Công đoàn là bắt buộc!", {
+            appearance: "error",
+            autoDismiss: true,
+          });
+          return;
+        }
+
+        // Kiểm tra URL hình ảnh
+        if (!isValidUrl(item.image)) {
+          addToast("URL hình ảnh không hợp lệ cho " + item.magv, {
+            appearance: "error",
+            autoDismiss: true,
+          });
+          return; // Bỏ qua item này
+        }
+        await addDoc(studentsCollection, {
+          ...item,
+          created_at: new Date(),
+        });
+      }
+
+      addToast("Đã thêm dữ liệu từ Excel thành công!", {
+        appearance: "success",
+        autoDismiss: true,
+      });
+      fetchData(); // Refresh the data after import
+    } catch (error) {
+      console.error("Error adding documents: ", error);
+      addToast("Có lỗi xảy ra khi thêm dữ liệu!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+    }
+  };
+
   return (
     <div>
       <div className="container mx-auto px-4 sm:px-8">
@@ -203,6 +357,20 @@ const Dashboard = () => {
             <h2 className="text-2xl font-semibold leading-tight">
               Danh sách điểm danh
             </h2>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={deleteInvalidImageUrls}
+              className="px-4 py-2 text-sm font-medium rounded-md leading-5 text-white transition-colors duration-150 bg-red-600 border border-transparent active:bg-red-600 hover:bg-red-700"
+            >
+              Xóa dữ liệu không hợp lệ
+            </button>
+            <div className="p-2 bg-gray-50 rounded-md hover:bg-gray-100">
+              <ExportToExcel data={items} fileName="DanhSachDiemDanh.xlsx" />
+            </div>{" "}
+            {/* Add this line */}
+            <ImportExcel onDataImport={handleDataImport} />{" "}
+            {/* Add ImportExcel component */}
           </div>
           <div className="my-2 flex sm:flex-row justify-between flex-col">
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 mb-1 sm:mb-0">

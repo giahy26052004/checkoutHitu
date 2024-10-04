@@ -55,7 +55,9 @@ const DropDown = ({ data, handleDelete, handleDetail }) => {
               Chi tiết
             </a>
             <a
-              onClick={() => handleDelete(data.id)}
+              onClick={() => {
+                handleDelete(data.id);
+              }}
               className="flex block rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-blue-100 items-center gap-3 cursor-pointer hover:text-red-500"
               role="menuitem"
             >
