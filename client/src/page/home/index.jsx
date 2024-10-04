@@ -16,7 +16,7 @@ import { useAddress } from "../../hook";
 import Loading from "../../components/Loading";
 import FormCheckIn from "./FormCheckIn";
 import { useToasts } from "react-toast-notifications";
-
+import FingerprintJS from "@fingerprintjs/fingerprintjs";
 const Home = () => {
   const [dataFetch, setDataFetch] = useState({
     TitleHome: "",
@@ -28,26 +28,21 @@ const Home = () => {
   const [loading, setLoading] = useState(false);
   const [isAllowed, setIsAllowed] = useState(true);
   const [dataVeriftyGroup, setDataVerifyGroup] = useState();
+  const [ip, setIp] = useState();
   const { address, userPosition } = useAddress();
-  console.log("address ", address);
-  const [macAddresses, setMacAddresses] = useState([]);
 
+
+  
+
+  const getFingerprint = async () => {
+    const fp = await FingerprintJS.load();
+    const result = await fp.get();
+    setIp(result.visitorId); // Sử dụng visitorId ở đây
+  };
+  console.log(ip);
   useEffect(() => {
-    const fetchMacAddresses = async () => {
-      try {
-        const response = await fetch("/api/mac");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setMacAddresses(data);
-      } catch (error) {
-        console.error("Error fetching MAC addresses:", error);
-      }
-    };
-    fetchMacAddresses();
-  }, []);
-
+    getFingerprint();
+  }, [ip]);
   const { addToast } = useToasts();
   const handleSubmit = async (values, { resetForm, setSubmitting }) => {
     dataVeriftyGroup.map((data) => {
@@ -103,7 +98,7 @@ const Home = () => {
         magv: values.magv,
         group: values.group,
         image: url,
-        mac: macAddresses,
+        mac: ip,
         address: address || "No address",
         position: JSON.stringify(userPosition || "No address"),
         created_at: new Date(),
