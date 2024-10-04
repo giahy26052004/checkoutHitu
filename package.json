@@ -4,8 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node mac-api/index.js ",
-    "start": "npm install && npm install  --legacy-peer-deps --prefix client && npm run dev --prefix client"
+    "dev": "node mac-api/index.js",
+    "build": "npm install && npm install  --legacy-peer-deps --prefix client && npm run build --prefix client"
   },
   "keywords": [],
   "author": "",

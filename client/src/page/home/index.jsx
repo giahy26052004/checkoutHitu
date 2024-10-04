@@ -35,7 +35,7 @@ const Home = () => {
   useEffect(() => {
     const fetchMacAddresses = async () => {
       try {
-        const response = await fetch("http://localhost:3002/api/mac");
+        const response = await fetch("/api/mac");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -71,6 +71,16 @@ const Home = () => {
     setSubmitting(true);
     if (!image) {
       addToast("Vui lòng chụp ảnh", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+
+      setSubmitting(false);
+      return;
+    }
+    setSubmitting(true);
+    if (!address) {
+      addToast("Vui lòng bật vị trí", {
         appearance: "error",
         autoDismiss: true,
       });

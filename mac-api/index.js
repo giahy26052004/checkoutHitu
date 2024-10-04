@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 
 dotenv.config();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5002;
 
 app.get("/api/mac", (req, res) => {
   try {
@@ -35,12 +35,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "client/dist")));
+  console.log("woking");
+  app.use(express.static(path.join(__dirname, "../client/dist")));
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
+    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
   });
 }
+console.log(path.join(__dirname, "../client/dist/index.html"));
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on ${PORT}`);
 });
